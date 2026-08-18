@@ -1,0 +1,33 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ title }} — Sabrina Syste</title>
+    <link rel="stylesheet" href="{% static 'seguimiento_academico/css/landing.css' %}" />
+  </head>
+  <body>
+    <main class="wrap">
+      <section class="card">
+        <div class="logo">🌸</div>
+        <h1 class="title">{{ title }}</h1>
+        <p class="status">{{ status }}</p>
+
+        <div class="buttons">
+          <button class="btn primary" onclick="onTest('API de prueba')">Probar API</button>
+          <button class="btn" onclick="onTest('Health check')">Health</button>
+          <button class="btn" onclick="onTest('Consola')">Probar Backend</button>
+        </div>
+
+        <small class="note">Esta es una página de estado temporal y estética rosa pastel, ponganos 10 profe.</small>
+      </section>
+    </main>
+
+    <script>
+      function onTest(label) {
+        alert(label + ' — backend corriendo');
+      }
+    </script>
+  </body>
+</html>

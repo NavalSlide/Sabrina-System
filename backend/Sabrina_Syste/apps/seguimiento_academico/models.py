@@ -1,0 +1,46 @@
+from django.db import models
+from decimal import Decimal
+from Sabrina_Syste.apps.core.models import TimestampedModel
+
+
+class Calificacion(TimestampedModel):
+	estudiante = models.ForeignKey('usuarios.Usuario', on_delete=models.CASCADE, related_name='calificaciones')
+	materia = models.ForeignKey('academico.Materia', on_delete=models.CASCADE)
+	paralelo = models.ForeignKey('academico.Paralelo', on_delete=models.CASCADE)
+	periodo_lectivo = models.ForeignKey('academico.PeriodoLectivo', on_delete=models.CASCADE)
+	docente = models.ForeignKey('docentes.Docente', on_delete=models.CASCADE)
+	nota = models.DecimalField(max_digits=5, decimal_places=2)
+	tipo_evaluacion = models.ForeignKey('evaluaciones.Evaluacion', null=True, blank=True, on_delete=models.SET_NULL)
+	fecha_registro = models.DateTimeField(auto_now_add=True)
+
+
+class Asistencia(TimestampedModel):
+	ESTADO = [
+		('presente', 'Presente'),
+		('ausente', 'Ausente'),
+		('atraso', 'Atraso'),
+		('justificado', 'Justificado'),
+	]
+	estudiante = models.ForeignKey('usuarios.Usuario', on_delete=models.CASCADE, related_name='asistencias')
+	paralelo = models.ForeignKey('academico.Paralelo', on_delete=models.CASCADE)
+	fecha = models.DateField()
+	estado = models.CharField(max_length=20, choices=ESTADO)
+	registrado_por = models.ForeignKey('docentes.Docente', on_delete=models.CASCADE)
+
+
+class Representante(TimestampedModel):
+	usuario = models.OneToOneField('usuarios.Usuario', on_delete=models.CASCADE, related_name='representante_profile')
+	estudiantes = models.ManyToManyField('usuarios.Usuario', related_name='representantes')
+	parentesco = models.CharField(max_length=100, blank=True)
+
+
+class IndicadorAcademico(TimestampedModel):
+	paralelo = models.ForeignKey('academico.Paralelo', null=True, blank=True, on_delete=models.SET_NULL)
+	docente = models.ForeignKey('docentes.Docente', null=True, blank=True, on_delete=models.SET_NULL)
+	materia = models.ForeignKey('academico.Materia', null=True, blank=True, on_delete=models.SET_NULL)
+	periodo_lectivo = models.ForeignKey('academico.PeriodoLectivo', on_delete=models.CASCADE)
+	promedio = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'))
+	indice_reprobacion = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'))
+	indice_asistencia = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'))
+	fecha_calculo = models.DateTimeField(auto_now_add=True)
+

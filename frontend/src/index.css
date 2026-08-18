@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #1e293b;
+  background: #fffafc;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+  @apply transition-colors duration-200;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-[radial-gradient(circle_at_top,_#fff1f2,_#fdf2f8_35%,_#f5f3ff_100%)] text-slate-800 m-0 min-h-screen;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+a {
+  @apply text-rose-500 hover:text-rose-600 font-medium;
+}
+
+button {
+  @apply font-medium;
+}
+
+input::placeholder {
+  color: #c084fc;
+}
