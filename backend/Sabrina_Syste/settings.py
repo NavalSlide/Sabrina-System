@@ -14,19 +14,29 @@ from pathlib import Path
 import os
 
 import dj_database_url
+import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load backend/.env if present (never committed - see .env.example for the
+# variables a fresh checkout needs to set).
+environ.Env.read_env(BASE_DIR / '.env')
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-uu7rmgo-elxd3si^$hw_v7h5=%@xdpx^(t$&bl)ii&xc^6-hth'
+# Falls back to an insecure dev-only key so a fresh checkout still boots,
+# but any real deployment must set SECRET_KEY via the environment/.env.
+SECRET_KEY = os.environ.get(
+    'SECRET_KEY',
+    'django-insecure-uu7rmgo-elxd3si^$hw_v7h5=%@xdpx^(t$&bl)ii&xc^6-hth',
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = ['*']
 
@@ -49,6 +59,22 @@ if _env_ngrok_host:
 else:
     ALLOWED_HOSTS = _default_local_hosts + _ngrok_wildcards
 
+# Django's CSRF middleware checks the Origin header against this list for
+# any unsafe request (POST/PUT/PATCH/DELETE) - without it every write from
+# the SPA (a different port than the backend) gets a 403 "Origin checking
+# failed", even with a valid session and CSRF cookie.
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+    'https://*.ngrok.io',
+    'https://*.ngrok-free.app',
+    'https://*.ngrok-free.dev',
+]
+if _env_ngrok_host:
+    CSRF_TRUSTED_ORIGINS.append(f'https://{_env_ngrok_host}')
+
 
 # Application definition
 
@@ -60,6 +86,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
+    'rest_framework',
+    'django_filters',
     'Sabrina_Syste.apps.usuarios',
     'Sabrina_Syste.apps.academico',
     'Sabrina_Syste.apps.docentes',
@@ -107,11 +135,13 @@ WSGI_APPLICATION = 'Sabrina_Syste.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
+#
+# Set DATABASE_URL in backend/.env (see .env.example) to point at the real
+# database. Never hardcode real credentials here - a fresh checkout falls
+# back to a local sqlite file so `manage.py runserver` still works out of
+# the box.
 
-DATABASE_URL = os.environ.get(
-    'DATABASE_URL',
-    'postgresql://neondb_owner:npg_WtJlShiZr8O3@ep-lucky-cake-ayhy8zxk-pooler.c-5.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
-)
+DATABASE_URL = os.environ.get('DATABASE_URL', f"sqlite:///{BASE_DIR / 'db.sqlite3'}")
 DATABASES = {
     'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600),
 }
@@ -163,7 +193,37 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'usuarios.Usuario'
 
 
+# Django REST Framework
+# https://www.django-rest-framework.org/api-guide/settings/
+#
+# The SPA authenticates with Django's session cookie (see apps/usuarios
+# login_view) so DRF just needs to recognize that same session + enforce
+# the CSRF header the frontend already sends on unsafe methods.
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'Sabrina_Syste.apps.core.pagination.StandardResultsSetPagination',
+    'PAGE_SIZE': 20,
+    'EXCEPTION_HANDLER': 'Sabrina_Syste.apps.core.exceptions.api_exception_handler',
+}
+
+
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
+# Dev default prints "sent" emails (e.g. password reset links) to the
+# runserver console. Point EMAIL_BACKEND at a real backend in production.
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'no-reply@sabrina.local')
+
+# Used to build links that point back at the SPA (password reset emails, etc).
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173')

@@ -1,3 +1,6 @@
 from django.contrib import admin
 
-# Register your models here.
+from .models import RegistroAuditoria, RespaldoSistema
+
+admin.site.register(RegistroAuditoria)
+admin.site.register(RespaldoSistema)

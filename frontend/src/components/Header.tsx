@@ -1,10 +1,11 @@
 import { useNavigate } from 'react-router-dom'
+import Icon from './Icon'
+import { useAuthUser } from '../hooks/useAuthUser'
 import { userService } from '../services/userService'
 
 export default function Header() {
   const navigate = useNavigate()
-  const rawUser = localStorage.getItem('user')
-  const user = rawUser ? JSON.parse(rawUser) : null
+  const user = useAuthUser()
 
   const handleLogout = async () => {
     try {
@@ -19,7 +20,7 @@ export default function Header() {
     <header className="bg-white/80 backdrop-blur-sm border-b border-rose-100 shadow-sm">
       <div className="flex items-center justify-between px-6 py-4">
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-gradient-to-br from-rose-300 to-pink-500 rounded-2xl flex items-center justify-center text-lg font-bold text-white shadow-md">
+          <div className="w-10 h-10 bg-gradient-to-br from-rose-300 to-pink-500 rounded-2xl flex items-center justify-center text-lg font-bold text-white shadow-md font-serif">
             S
           </div>
           <div>
@@ -29,14 +30,19 @@ export default function Header() {
         </div>
 
         <div className="flex items-center gap-6">
+          {user?.rol && (
+            <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-600">
+              <Icon name="tag" size={13} />
+              {user.rol}
+            </span>
+          )}
+
           <button
             type="button"
             onClick={handleLogout}
             className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 hover:bg-rose-100 transition-colors"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1" />
-            </svg>
+            <Icon name="logout" size={16} />
             Cerrar sesión
           </button>
 

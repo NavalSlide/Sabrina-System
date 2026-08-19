@@ -1,5 +1,9 @@
 # Project development dependencies
-pyngrok>=6.0.0
+Django>=4.2,<5.0
+djangorestframework>=3.14.0,<3.15
+django-filter>=23.5,<24.0
+django-environ>=0.11.2,<0.12
 django-cors-headers>=4.7.0
 dj-database-url>=2.2.0
 psycopg[binary]>=3.2.1
+pyngrok>=6.0.0

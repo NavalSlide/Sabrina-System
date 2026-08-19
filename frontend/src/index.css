@@ -21,8 +21,12 @@ html {
 }
 
 body {
-  @apply bg-[radial-gradient(circle_at_top,_#fff1f2,_#fdf2f8_35%,_#f5f3ff_100%)] text-slate-800 m-0 min-h-screen;
-  font-family: 'Segoe UI', sans-serif;
+  @apply bg-[radial-gradient(circle_at_top,_#fff1f2,_#fdf2f8_35%,_#f5f3ff_100%)] text-slate-800 m-0 min-h-screen font-sans;
+}
+
+h1, h2, h3 {
+  font-family: 'Fraunces', Georgia, serif;
+  letter-spacing: -0.01em;
 }
 
 #root {

@@ -1,13 +1,17 @@
+import datetime
+
 from django.contrib.auth import get_user_model
-from django.db.models import Count, Q
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 
-from Sabrina_Syste.apps.academico.models import Curso, PeriodoLectivo
+from Sabrina_Syste.apps.academico.models import Curso, Paralelo, PeriodoLectivo, PlanEstudio
 from Sabrina_Syste.apps.docentes.models import Docente
 from Sabrina_Syste.apps.evaluaciones.models import Evaluacion
+from Sabrina_Syste.apps.horarios.models import Horario
 from Sabrina_Syste.apps.laboratorios.models import Laboratorio
 from Sabrina_Syste.apps.reservas.models import Reserva
+
+DIAS = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo']
 
 
 @require_http_methods(["GET"])
@@ -17,43 +21,48 @@ def dashboard_summary(request):
 
     user_model = get_user_model()
 
+    periodo_actual = PeriodoLectivo.objects.filter(activo=True).order_by('-fecha_inicio').first()
+    if periodo_actual is None:
+        periodo_actual = PeriodoLectivo.objects.order_by('-fecha_inicio').first()
+
+    docentes_con_asignacion = Docente.objects.filter(asignaciones__isnull=False).distinct().count()
+    paralelos_abiertos = Paralelo.objects.filter(periodo_lectivo=periodo_actual).count() if periodo_actual else 0
+    labs_disponibles = Laboratorio.objects.filter(estado='disponible').count()
+
     stats = [
         {
             "label": "Usuarios",
             "value": user_model.objects.count(),
-            "icon": "👥",
+            "icon": "user-circle",
             "color": "rose",
-            "trend": "+12% vs. mes anterior",
+            "trend": "Total registrados",
         },
         {
             "label": "Docentes",
             "value": Docente.objects.count(),
-            "icon": "👩‍🏫",
+            "icon": "users",
             "color": "pink",
-            "trend": "+3 nuevos",
+            "trend": f"{docentes_con_asignacion} con asignacion activa",
         },
         {
             "label": "Cursos",
             "value": Curso.objects.count(),
-            "icon": "📚",
+            "icon": "book-open",
             "color": "peach",
-            "trend": "Activos hoy",
+            "trend": f"{paralelos_abiertos} paralelos en el periodo actual",
         },
         {
             "label": "Laboratorios",
             "value": Laboratorio.objects.count(),
-            "icon": "🧪",
+            "icon": "flask",
             "color": "purple",
-            "trend": "Disponibles",
+            "trend": f"{labs_disponibles} disponibles ahora",
         },
     ]
 
-    periodos = PeriodoLectivo.objects.order_by('-fecha_inicio')
-    periodo_actual = periodos.first()
-
     reservas_pendientes = Reserva.objects.filter(estado='pendiente').count()
     reservas_aprobadas = Reserva.objects.filter(estado='aprobada').count()
-    evaluaciones_hoy = Evaluacion.objects.filter(fecha__gte=__import__('datetime').date.today()).count()
+    evaluaciones_hoy = Evaluacion.objects.filter(fecha=datetime.date.today()).count()
 
     recent_activity = [
         {
@@ -61,34 +70,45 @@ def dashboard_summary(request):
             "title": "Periodo académico activo",
             "description": periodo_actual.nombre if periodo_actual else "Sin periodo definido",
             "time": "Hoy",
-            "icon": "✨",
+            "icon": "calendar",
         },
         {
             "id": 2,
             "title": "Reservas pendientes",
             "description": f"Hay {reservas_pendientes} reservaciones por aprobar.",
             "time": "Revisión",
-            "icon": "📝",
+            "icon": "clipboard-list",
         },
         {
             "id": 3,
             "title": "Evaluaciones programadas",
             "description": f"{evaluaciones_hoy} evaluaciones vigentes para hoy.",
             "time": "Agenda",
-            "icon": "📌",
+            "icon": "flag",
         },
     ]
 
-    next_classes = [
-        {"name": "Robótica", "schedule": "Lun 09:00 - 11:00", "room": "Laboratorio 2"},
-        {"name": "Matemáticas", "schedule": "Mar 10:00 - 11:30", "room": "Aula 4"},
-        {"name": "Ciencias", "schedule": "Jue 08:30 - 10:00", "room": "Aula 3"},
-    ]
+    next_classes = []
+    if periodo_actual:
+        hoy = datetime.date.today().weekday()
+        horarios_qs = (
+            Horario.objects.select_related('materia', 'bloque_horario', 'laboratorio', 'paralelo')
+            .filter(periodo_lectivo=periodo_actual, dia_semana__gte=hoy)
+            .order_by('dia_semana', 'bloque_horario__orden')[:3]
+        )
+        for horario in horarios_qs:
+            lugar = horario.laboratorio.nombre if horario.laboratorio else f"Paralelo {horario.paralelo.nombre}"
+            next_classes.append({
+                "name": horario.materia.nombre,
+                "schedule": f"{DIAS[horario.dia_semana]} {horario.bloque_horario.hora_inicio.strftime('%H:%M')} - {horario.bloque_horario.hora_fin.strftime('%H:%M')}",
+                "room": lugar,
+            })
 
+    plan_estudio_ok = PlanEstudio.objects.filter(periodo_lectivo=periodo_actual).exists() if periodo_actual else False
     tasks = [
-        {"title": "Revisar reservas", "due": "2 días", "done": reservas_pendientes == 0},
-        {"title": "Actualizar plan de estudio", "due": "4 días", "done": False},
-        {"title": "Confirmar evaluaciones", "due": "1 día", "done": evaluaciones_hoy == 0},
+        {"title": "Revisar reservas pendientes", "due": "Cuando haya solicitudes", "done": reservas_pendientes == 0},
+        {"title": "Definir plan de estudio del periodo", "due": "Antes de iniciar clases", "done": plan_estudio_ok},
+        {"title": "Confirmar evaluaciones del dia", "due": "Hoy", "done": evaluaciones_hoy == 0},
     ]
 
     response = {

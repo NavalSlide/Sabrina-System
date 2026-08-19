@@ -1,3 +1,9 @@
 from django.contrib import admin
 
-# Register your models here.
+from .models import AsignacionDocente, Docente, DisponibilidadDocente, DocenteLaboratorioAutorizado, DocenteMateriaAutorizada
+
+admin.site.register(Docente)
+admin.site.register(DisponibilidadDocente)
+admin.site.register(DocenteLaboratorioAutorizado)
+admin.site.register(DocenteMateriaAutorizada)
+admin.site.register(AsignacionDocente)

@@ -61,6 +61,7 @@ class Paralelo(TimestampedModel):
 class Materia(TimestampedModel):
 	nombre = models.CharField(max_length=150)
 	descripcion = models.TextField(blank=True)
+	creditos = models.IntegerField(default=1)
 
 	def __str__(self):
 		return self.nombre

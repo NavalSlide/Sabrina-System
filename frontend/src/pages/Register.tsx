@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import Icon from '@components/Icon'
 import { userService } from '../services/userService'
+import { extractErrorMessage } from '../utils/errors'
 
 export default function Register() {
   const navigate = useNavigate()
@@ -14,7 +16,7 @@ export default function Register() {
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,128}$/
-  const nameRegex = /^[A-Za-zÀ-ÿ\s'\-]+$/
+  const nameRegex = /^[A-Za-zÀ-ÿ\s'-]+$/
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -65,8 +67,8 @@ export default function Register() {
       }
 
       setError(response.data.error || 'No se pudo registrar el usuario.')
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Error al crear la cuenta.')
+    } catch (err) {
+      setError(extractErrorMessage(err, 'Error al crear la cuenta.'))
     } finally {
       setLoading(false)
     }
@@ -82,16 +84,22 @@ export default function Register() {
       <div className="relative w-full max-w-5xl grid lg:grid-cols-[1fr_1.1fr] gap-8 items-center">
         <div className="hidden lg:block p-8 text-slate-700">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-rose-300 to-pink-500 rounded-[28px] shadow-lg mb-6">
-            <span className="text-4xl font-bold text-white">S</span>
+            <span className="text-4xl font-bold text-white font-display">S</span>
           </div>
           <h1 className="text-5xl font-black text-rose-500 mb-4">Únete a Sabrina</h1>
           <p className="text-xl text-slate-600 max-w-md">Crea tu cuenta y disfruta de una experiencia más ordenada, bonita y eficiente para tu comunidad escolar.</p>
 
           <div className="mt-8 space-y-4">
-            {['Seguimiento académico claro', 'Horarios y evaluaciones organizados', 'Acceso a todo el equipo en un clic'].map((item) => (
-              <div key={item} className="flex items-center gap-3 bg-white/70 rounded-2xl p-3 border border-rose-100 shadow-sm">
-                <div className="w-8 h-8 rounded-full bg-rose-100 text-rose-500 flex items-center justify-center">✓</div>
-                <span className="text-slate-700 font-medium">{item}</span>
+            {[
+              { text: 'Seguimiento académico claro', icon: 'clipboard-list' as const },
+              { text: 'Horarios y evaluaciones organizados', icon: 'calendar' as const },
+              { text: 'Acceso a todo el equipo en un clic', icon: 'users' as const },
+            ].map((item) => (
+              <div key={item.text} className="flex items-center gap-3 bg-white/70 rounded-2xl p-3 border border-rose-100 shadow-sm">
+                <div className="w-8 h-8 rounded-full bg-rose-100 text-rose-500 flex items-center justify-center shrink-0">
+                  <Icon name={item.icon} size={16} />
+                </div>
+                <span className="text-slate-700 font-medium">{item.text}</span>
               </div>
             ))}
           </div>

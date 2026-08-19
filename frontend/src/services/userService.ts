@@ -1,5 +1,6 @@
 import apiClient from './api'
-import type { User, ApiResponse } from '../types'
+import type { ApiResponse } from '../types'
+import type { IconName } from '../components/Icon'
 
 export type AuthUser = {
   id: string
@@ -7,13 +8,15 @@ export type AuthUser = {
   first_name: string
   last_name: string
   full_name: string
+  rol: string | null
+  is_admin: boolean
 }
 
 export type DashboardSummary = {
   stats: Array<{
     label: string
     value: number
-    icon: string
+    icon: IconName
     color: 'rose' | 'pink' | 'peach' | 'purple'
     trend: string
   }>
@@ -28,7 +31,7 @@ export type DashboardSummary = {
     title: string
     description: string
     time: string
-    icon: string
+    icon: IconName
   }>
   nextClasses: Array<{
     name: string
@@ -65,23 +68,11 @@ export const userService = {
   getCurrentUser: () =>
     apiClient.get<ApiResponse<{ user: AuthUser }>>('/me/'),
 
-  updateProfile: (data: Partial<User>) =>
-    apiClient.put<ApiResponse<User>>('/users/me', data),
+  requestPasswordReset: (email: string) =>
+    apiClient.post<ApiResponse<null>>('/password-reset/', { email }),
 
-  getUsers: (page: number = 1, pageSize: number = 10) =>
-    apiClient.get<ApiResponse<User[]>>('/users', { params: { page, pageSize } }),
-
-  getUserById: (id: string) =>
-    apiClient.get<ApiResponse<User>>(`/users/${id}`),
-
-  createUser: (data: Partial<User>) =>
-    apiClient.post<ApiResponse<User>>('/users', data),
-
-  updateUser: (id: string, data: Partial<User>) =>
-    apiClient.put<ApiResponse<User>>(`/users/${id}`, data),
-
-  deleteUser: (id: string) =>
-    apiClient.delete<ApiResponse<void>>(`/users/${id}`),
+  confirmPasswordReset: (token: string, password: string) =>
+    apiClient.post<ApiResponse<null>>('/password-reset/confirm/', { token, password }),
 }
 
 export default userService

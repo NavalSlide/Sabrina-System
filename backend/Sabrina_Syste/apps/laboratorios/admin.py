@@ -1,3 +1,7 @@
 from django.contrib import admin
 
-# Register your models here.
+from .models import EquipoLaboratorio, Laboratorio, SoftwareInstalado
+
+admin.site.register(Laboratorio)
+admin.site.register(EquipoLaboratorio)
+admin.site.register(SoftwareInstalado)

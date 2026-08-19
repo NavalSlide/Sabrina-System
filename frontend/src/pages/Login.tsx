@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import Icon from '@components/Icon'
 import { userService } from '../services/userService'
+import { extractErrorMessage } from '../utils/errors'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -44,8 +46,8 @@ export default function Login() {
       }
 
       setError(response.data.error || 'Email o contraseña incorrectos')
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Email o contraseña incorrectos')
+    } catch (err) {
+      setError(extractErrorMessage(err, 'Email o contraseña incorrectos'))
     } finally {
       setLoading(false)
     }
@@ -59,9 +61,9 @@ export default function Login() {
       </div>
 
       <div className="relative w-full max-w-5xl grid lg:grid-cols-[1.1fr_0.9fr] gap-8 items-center">
-        <div className="hidden lg:block p-8 text-slate-700">
+        <div className="hidden lg:block p-8 text-slate-700 animate-riseIn">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-rose-300 to-pink-500 rounded-[28px] shadow-lg mb-6">
-            <span className="text-4xl font-bold text-white">S</span>
+            <span className="text-4xl font-bold text-white font-display">S</span>
           </div>
           <h1 className="text-5xl font-black text-rose-500 mb-4">Sabrina</h1>
           <p className="text-xl text-slate-600 max-w-md">Tu espacio para gestionar clases, docentes, horarios y la vida académica con calma y estilo.</p>
@@ -78,14 +80,15 @@ export default function Login() {
           </div>
         </div>
 
-        <div className="bg-white/90 backdrop-blur-md rounded-[32px] shadow-[0_25px_60px_rgba(190,24,93,0.18)] p-8 border border-rose-100">
+        <div className="bg-white/90 backdrop-blur-md rounded-[32px] shadow-[0_25px_60px_rgba(190,24,93,0.18)] p-8 border border-rose-100 animate-riseIn [animation-delay:80ms]">
           <div className="text-center mb-6">
             <p className="text-sm uppercase tracking-[0.24em] text-rose-400">Bienvenido</p>
             <h2 className="text-3xl font-black text-slate-800 mt-2">Iniciar sesión</h2>
           </div>
 
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+            <div className="mb-6 flex items-start gap-2 p-4 bg-red-50 border border-red-200 rounded-xl">
+              <Icon name="x-circle" size={18} className="text-red-500 shrink-0 mt-0.5" />
               <p className="text-red-700 text-sm font-medium">{error}</p>
             </div>
           )}
@@ -93,33 +96,39 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">Correo electrónico</label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="tu@email.com"
-                pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"
-                minLength={6}
-                maxLength={254}
-                className="w-full px-4 py-3 border border-rose-200 bg-rose-50/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-transparent"
-                required
-              />
+              <div className="relative">
+                <Icon name="mail" size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-rose-300" />
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="tu@email.com"
+                  pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"
+                  minLength={6}
+                  maxLength={254}
+                  className="w-full pl-11 pr-4 py-3 border border-rose-200 bg-rose-50/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-transparent"
+                  required
+                />
+              </div>
             </div>
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-2">Contraseña</label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                minLength={8}
-                maxLength={128}
-                className="w-full px-4 py-3 border border-rose-200 bg-rose-50/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-transparent"
-                required
-              />
+              <div className="relative">
+                <Icon name="key" size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-rose-300" />
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  minLength={8}
+                  maxLength={128}
+                  className="w-full pl-11 pr-4 py-3 border border-rose-200 bg-rose-50/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-transparent"
+                  required
+                />
+              </div>
             </div>
 
             <div className="flex items-center justify-between text-sm">
@@ -127,7 +136,9 @@ export default function Login() {
                 <input type="checkbox" className="w-4 h-4 accent-rose-500 rounded" />
                 Recordarme
               </label>
-              <a href="#" className="text-rose-500 hover:text-rose-600 font-medium">¿Olvidaste tu contraseña?</a>
+              <Link to="/recuperar-contrasena" className="text-rose-500 hover:text-rose-600 font-medium">
+                ¿Olvidaste tu contraseña?
+              </Link>
             </div>
 
             <button
