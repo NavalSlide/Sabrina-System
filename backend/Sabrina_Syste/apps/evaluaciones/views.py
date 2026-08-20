@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 
 from Sabrina_Syste.apps.core.mixins import AuditLogMixin
-from Sabrina_Syste.apps.core.permissions import IsAdminOrReadOnly, IsDocenteOrAdminOrReadOnly
+from Sabrina_Syste.apps.core.permissions import IsAdminOrReadOnly, IsDocenteOrAdminOrReadOnly, is_admin, role_name
 
 from .models import Actividad, ConfiguracionEvaluacion, Evaluacion
 from .serializers import ActividadSerializer, ConfiguracionEvaluacionSerializer, EvaluacionSerializer
@@ -20,6 +20,18 @@ class EvaluacionViewSet(AuditLogMixin, viewsets.ModelViewSet):
     serializer_class = EvaluacionSerializer
     permission_classes = [IsDocenteOrAdminOrReadOnly]
     filterset_fields = ['paralelo', 'materia', 'docente', 'periodo_lectivo', 'tipo', 'fecha']
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        user = self.request.user
+        if is_admin(user):
+            return qs
+        rol = role_name(user)
+        if rol == 'Estudiante':
+            return qs.filter(paralelo__estudiantes__usuario=user)
+        if rol == 'Representante':
+            return qs.filter(paralelo__estudiantes__representantes__usuario=user)
+        return qs
 
     def perform_create(self, serializer):
         docente_profile = getattr(self.request.user, 'docente_profile', None)

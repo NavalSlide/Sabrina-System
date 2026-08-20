@@ -4,6 +4,7 @@ import PageHeader from '@components/PageHeader'
 import Tabs from '@components/Tabs'
 import { useAuthUser } from '../hooks/useAuthUser'
 import { useCrud } from '../hooks/useCrud'
+import { useTabParam } from '../hooks/useTabParam'
 import {
   asignacionDocenteService,
   disponibilidadDocenteService,
@@ -35,6 +36,7 @@ const DIAS = [
 export default function Docentes() {
   const user = useAuthUser()
   const canWrite = Boolean(user?.is_admin)
+  const initialTab = useTabParam()
 
   const docentes = useCrud(docenteService)
   const usuarios = useCrud(usuarioAdminService)
@@ -81,6 +83,7 @@ export default function Docentes() {
       />
 
       <Tabs
+        initialTab={initialTab}
         onChange={reloadAll}
         tabs={[
           {

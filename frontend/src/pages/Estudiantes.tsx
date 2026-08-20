@@ -4,6 +4,7 @@ import PageHeader from '@components/PageHeader'
 import Tabs from '@components/Tabs'
 import { useAuthUser } from '../hooks/useAuthUser'
 import { useCrud } from '../hooks/useCrud'
+import { useTabParam } from '../hooks/useTabParam'
 import { paraleloService, materiaService, periodoLectivoService } from '../services/academicoService'
 import { docenteService } from '../services/docentesService'
 import { asistenciaService, calificacionService, estudianteService, representanteService } from '../services/estudiantesService'
@@ -31,6 +32,7 @@ export default function Estudiantes() {
   const isDocente = user?.rol === 'Docente'
   const canManageEstudiantes = isAdmin
   const canManageSeguimiento = isAdmin || isDocente
+  const initialTab = useTabParam()
 
   const estudiantes = useCrud(estudianteService)
   const usuarios = useCrud(usuarioAdminService)
@@ -74,6 +76,7 @@ export default function Estudiantes() {
       />
 
       <Tabs
+        initialTab={initialTab}
         onChange={reloadAll}
         tabs={[
           {
@@ -181,7 +184,7 @@ export default function Estudiantes() {
               />
             ),
           },
-        ]}
+        ].filter((tab) => tab.key !== 'representantes' || isAdmin)}
       />
     </div>
   )

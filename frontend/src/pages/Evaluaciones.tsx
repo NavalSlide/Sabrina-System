@@ -4,6 +4,7 @@ import PageHeader from '@components/PageHeader'
 import Tabs from '@components/Tabs'
 import { useAuthUser } from '../hooks/useAuthUser'
 import { useCrud } from '../hooks/useCrud'
+import { useTabParam } from '../hooks/useTabParam'
 import { materiaService, paraleloService, periodoLectivoService } from '../services/academicoService'
 import { docenteService } from '../services/docentesService'
 import { actividadService, configuracionEvaluacionService, evaluacionService } from '../services/evaluacionesService'
@@ -20,6 +21,7 @@ export default function Evaluaciones() {
   const user = useAuthUser()
   const isAdmin = Boolean(user?.is_admin)
   const canManageEvaluaciones = isAdmin || user?.rol === 'Docente'
+  const initialTab = useTabParam()
 
   const paralelos = useCrud(paraleloService)
   const materias = useCrud(materiaService)
@@ -48,6 +50,7 @@ export default function Evaluaciones() {
       />
 
       <Tabs
+        initialTab={initialTab}
         onChange={reloadAll}
         tabs={[
           {

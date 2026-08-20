@@ -4,12 +4,14 @@ import PageHeader from '@components/PageHeader'
 import Tabs from '@components/Tabs'
 import { useAuthUser } from '../hooks/useAuthUser'
 import { useCrud } from '../hooks/useCrud'
+import { useTabParam } from '../hooks/useTabParam'
 import { permisoService, rolPermisoService, rolService, usuarioAdminService } from '../services/adminUsuariosService'
 import type { Permiso, Rol, RolPermiso, Usuario } from '../types'
 
 export default function Usuarios() {
   const user = useAuthUser()
   const canWrite = Boolean(user?.is_admin)
+  const initialTab = useTabParam()
 
   const roles = useCrud(rolService)
   const permisos = useCrud(permisoService)
@@ -31,6 +33,7 @@ export default function Usuarios() {
       />
 
       <Tabs
+        initialTab={initialTab}
         onChange={reloadAll}
         tabs={[
           {

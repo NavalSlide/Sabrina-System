@@ -37,6 +37,8 @@ class EstudianteViewSet(AuditLogMixin, viewsets.ModelViewSet):
             return qs
         if role_name(user) == 'Estudiante':
             return qs.filter(usuario=user)
+        if role_name(user) == 'Representante':
+            return qs.filter(representantes__usuario=user)
         return qs
 
 
@@ -55,6 +57,8 @@ class AsistenciaViewSet(AuditLogMixin, viewsets.ModelViewSet):
             return qs.filter(estudiante__usuario=user)
         if role_name(user) == 'Docente':
             return qs.filter(registrado_por__usuario=user)
+        if role_name(user) == 'Representante':
+            return qs.filter(estudiante__representantes__usuario=user)
         return qs.none()
 
     def perform_create(self, serializer):
@@ -83,6 +87,8 @@ class CalificacionViewSet(AuditLogMixin, viewsets.ModelViewSet):
             return qs.filter(estudiante__usuario=user)
         if role_name(user) == 'Docente':
             return qs.filter(docente__usuario=user)
+        if role_name(user) == 'Representante':
+            return qs.filter(estudiante__representantes__usuario=user)
         return qs.none()
 
     def perform_create(self, serializer):
@@ -98,6 +104,30 @@ class RepresentanteViewSet(AuditLogMixin, viewsets.ModelViewSet):
     queryset = Representante.objects.select_related('usuario').prefetch_related('estudiantes__usuario').all()
     serializer_class = RepresentanteSerializer
     permission_classes = [IsAdminOrReadOnly]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        user = self.request.user
+        if is_admin(user):
+            return qs
+        if role_name(user) == 'Representante':
+            return qs.filter(usuario=user)
+        return qs.none()
+
+    def perform_create(self, serializer):
+        super().perform_create(serializer)
+        # A representante profile is useless for role-based scoping (which
+        # reads Usuario.rol, not "has a Representante row") unless the
+        # account's role actually says Representante - keep them in sync,
+        # but never downgrade an admin/docente/estudiante-with-other-needs.
+        from Sabrina_Syste.apps.usuarios.models import Rol
+
+        usuario = serializer.instance.usuario
+        if usuario.rol_id is None or usuario.rol.nombre not in ('Administrador', 'Docente', 'Representante'):
+            representante_rol = Rol.objects.filter(nombre='Representante').first()
+            if representante_rol:
+                usuario.rol = representante_rol
+                usuario.save(update_fields=['rol'])
 
 
 class IndicadorAcademicoViewSet(AuditLogMixin, viewsets.ModelViewSet):

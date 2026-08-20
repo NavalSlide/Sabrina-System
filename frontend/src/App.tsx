@@ -1,10 +1,12 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import Layout from '@components/Layout'
+import RoleGuard from '@components/RoleGuard'
 import Dashboard from '@pages/Dashboard'
 import Login from '@pages/Login'
 import Register from '@pages/Register'
 import ForgotPassword from '@pages/ForgotPassword'
 import ResetPassword from '@pages/ResetPassword'
+import PanelAdmin from '@pages/PanelAdmin'
 import Academico from '@pages/Academico'
 import Docentes from '@pages/Docentes'
 import Horarios from '@pages/Horarios'
@@ -43,16 +45,17 @@ function App() {
             }
           >
             <Route index element={<Dashboard />} />
-            <Route path="academico" element={<Academico />} />
-            <Route path="docentes" element={<Docentes />} />
+            <Route path="panel" element={<RoleGuard navKey="panel"><PanelAdmin /></RoleGuard>} />
+            <Route path="academico" element={<RoleGuard navKey="academico"><Academico /></RoleGuard>} />
+            <Route path="docentes" element={<RoleGuard navKey="docentes"><Docentes /></RoleGuard>} />
             <Route path="horarios" element={<Horarios />} />
             <Route path="estudiantes" element={<Estudiantes />} />
-            <Route path="laboratorios" element={<Laboratorios />} />
-            <Route path="reservas" element={<Reservas />} />
+            <Route path="laboratorios" element={<RoleGuard navKey="laboratorios"><Laboratorios /></RoleGuard>} />
+            <Route path="reservas" element={<RoleGuard navKey="reservas"><Reservas /></RoleGuard>} />
             <Route path="evaluaciones" element={<Evaluaciones />} />
             <Route path="notificaciones" element={<Notificaciones />} />
-            <Route path="auditoria" element={<Auditoria />} />
-            <Route path="usuarios" element={<Usuarios />} />
+            <Route path="auditoria" element={<RoleGuard navKey="auditoria"><Auditoria /></RoleGuard>} />
+            <Route path="usuarios" element={<RoleGuard navKey="usuarios"><Usuarios /></RoleGuard>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

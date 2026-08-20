@@ -4,6 +4,7 @@ import PageHeader from '@components/PageHeader'
 import Tabs from '@components/Tabs'
 import { useAuthUser } from '../hooks/useAuthUser'
 import { useCrud } from '../hooks/useCrud'
+import { useTabParam } from '../hooks/useTabParam'
 import {
   cursoService,
   especialidadService,
@@ -18,6 +19,7 @@ import type { Curso, Especialidad, Jornada, Materia, Paralelo, PeriodoLectivo, P
 export default function Academico() {
   const user = useAuthUser()
   const canWrite = Boolean(user?.is_admin)
+  const initialTab = useTabParam()
 
   const especialidades = useCrud(especialidadService)
   const cursos = useCrud(cursoService)
@@ -49,6 +51,7 @@ export default function Academico() {
       />
 
       <Tabs
+        initialTab={initialTab}
         onChange={reloadAll}
         tabs={[
           {

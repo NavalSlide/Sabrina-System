@@ -1,30 +1,14 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import Icon, { type IconName } from './Icon'
+import Icon from './Icon'
+import { visibleNavItems } from '../config/nav'
 import { useAuthUser } from '../hooks/useAuthUser'
 import { userService } from '../services/userService'
-
-const menuItems: Array<{ label: string; href: string; icon: IconName }> = [
-  { label: 'Dashboard', href: '/', icon: 'home' },
-  { label: 'Académico', href: '/academico', icon: 'book-open' },
-  { label: 'Docentes', href: '/docentes', icon: 'users' },
-  { label: 'Estudiantes', href: '/estudiantes', icon: 'graduation-cap' },
-  { label: 'Horarios', href: '/horarios', icon: 'calendar' },
-  { label: 'Evaluaciones', href: '/evaluaciones', icon: 'chart-bar' },
-  { label: 'Laboratorios', href: '/laboratorios', icon: 'flask' },
-  { label: 'Reservas', href: '/reservas', icon: 'bookmark' },
-  { label: 'Notificaciones', href: '/notificaciones', icon: 'bell' },
-]
-
-const adminMenuItems: Array<{ label: string; href: string; icon: IconName }> = [
-  { label: 'Usuarios', href: '/usuarios', icon: 'user-circle' },
-  { label: 'Auditoría', href: '/auditoria', icon: 'shield-check' },
-]
 
 export default function Sidebar() {
   const location = useLocation()
   const navigate = useNavigate()
   const user = useAuthUser()
-  const items = user?.is_admin ? [...menuItems, ...adminMenuItems] : menuItems
+  const items = visibleNavItems(user)
 
   const handleLogout = async () => {
     try {
@@ -45,6 +29,7 @@ export default function Sidebar() {
           <div>
             <p className="text-sm uppercase tracking-[0.2em] text-rose-100">Sabrina</p>
             <h2 className="text-xl font-bold">Academia</h2>
+            {user?.rol && <p className="text-[11px] text-rose-100/80">{user.rol}</p>}
           </div>
         </div>
       </div>

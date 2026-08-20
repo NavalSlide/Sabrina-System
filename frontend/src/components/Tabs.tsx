@@ -11,10 +11,14 @@ interface TabsProps {
   /** Fired whenever the active tab changes - lets the parent page refresh
    * cross-tab lookups (e.g. a select fed by data another tab just created). */
   onChange?: (key: string) => void
+  /** Opens on this tab instead of the first one (e.g. deep-linked from ?tab=). */
+  initialTab?: string
 }
 
-export default function Tabs({ tabs, onChange }: TabsProps) {
-  const [active, setActive] = useState(tabs[0]?.key)
+export default function Tabs({ tabs, onChange, initialTab }: TabsProps) {
+  const [active, setActive] = useState(
+    initialTab && tabs.some((t) => t.key === initialTab) ? initialTab : tabs[0]?.key
+  )
 
   const handleSelect = (key: string) => {
     setActive(key)

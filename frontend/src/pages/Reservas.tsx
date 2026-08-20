@@ -6,6 +6,7 @@ import PageHeader from '@components/PageHeader'
 import Tabs from '@components/Tabs'
 import { useAuthUser } from '../hooks/useAuthUser'
 import { useCrud } from '../hooks/useCrud'
+import { useTabParam } from '../hooks/useTabParam'
 import { useToast } from '../hooks/useToast'
 import { extractErrorMessage } from '../utils/errors'
 import { docenteService } from '../services/docentesService'
@@ -137,6 +138,7 @@ export default function Reservas() {
   const user = useAuthUser()
   const canWrite = Boolean(user?.is_admin) || user?.rol === 'Docente'
   const isAdmin = Boolean(user?.is_admin)
+  const initialTab = useTabParam()
 
   const docentes = useCrud(docenteService)
   const laboratorios = useCrud(laboratorioService)
@@ -165,6 +167,7 @@ export default function Reservas() {
       />
 
       <Tabs
+        initialTab={initialTab}
         onChange={reloadAll}
         tabs={[
           {

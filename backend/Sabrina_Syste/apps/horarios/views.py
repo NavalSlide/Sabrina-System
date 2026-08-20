@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 
 from Sabrina_Syste.apps.core.mixins import AuditLogMixin
-from Sabrina_Syste.apps.core.permissions import IsAdminOrReadOnly
+from Sabrina_Syste.apps.core.permissions import IsAdminOrReadOnly, is_admin, role_name
 
 from .models import BloqueHorario, ConflictoHorario, Horario, MateriaConsecutivaRegla
 from .serializers import (
@@ -25,6 +25,21 @@ class HorarioViewSet(AuditLogMixin, viewsets.ModelViewSet):
     serializer_class = HorarioSerializer
     permission_classes = [IsAdminOrReadOnly]
     filterset_fields = ['paralelo', 'docente', 'laboratorio', 'dia_semana', 'periodo_lectivo', 'estado']
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        user = self.request.user
+        if is_admin(user):
+            return qs
+        rol = role_name(user)
+        # Docentes see the full school schedule (useful context for planning /
+        # spotting lab conflicts). Students and guardians only see what's
+        # relevant to them.
+        if rol == 'Estudiante':
+            return qs.filter(paralelo__estudiantes__usuario=user)
+        if rol == 'Representante':
+            return qs.filter(paralelo__estudiantes__representantes__usuario=user)
+        return qs
 
 
 class MateriaConsecutivaReglaViewSet(AuditLogMixin, viewsets.ModelViewSet):
