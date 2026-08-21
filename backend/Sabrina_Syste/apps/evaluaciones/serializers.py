@@ -51,6 +51,12 @@ class EvaluacionSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 f'Ya se alcanzo el maximo de {max_por_dia} evaluacion(es) para ese paralelo en esa fecha.'
             )
+
+        # Regla: las evaluaciones no pueden coincidir con actividades institucionales.
+        if fecha and Actividad.objects.filter(fecha=fecha).exists():
+            raise serializers.ValidationError(
+                f'Ya hay una actividad institucional programada para el {fecha}; elige otra fecha para la evaluacion.'
+            )
         return attrs
 
 

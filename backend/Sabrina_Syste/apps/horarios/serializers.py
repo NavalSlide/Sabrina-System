@@ -1,6 +1,15 @@
 from rest_framework import serializers
 
+from Sabrina_Syste.apps.docentes.rules import check_materia_autorizada
+
 from .models import BloqueHorario, ConflictoHorario, Horario, MateriaConsecutivaRegla
+from .rules import (
+    check_capacidad_laboratorio,
+    check_carga_semanal_docente,
+    check_consecutivas_materia,
+    check_horas_dia,
+    check_no_receso,
+)
 
 
 class BloqueHorarioSerializer(serializers.ModelSerializer):
@@ -47,7 +56,11 @@ class HorarioSerializer(serializers.ModelSerializer):
         bloque = attrs.get('bloque_horario', getattr(self.instance, 'bloque_horario', None))
         dia = attrs.get('dia_semana', getattr(self.instance, 'dia_semana', None))
         periodo = attrs.get('periodo_lectivo', getattr(self.instance, 'periodo_lectivo', None))
+        materia = attrs.get('materia', getattr(self.instance, 'materia', None))
+        exclude_pk = self.instance.pk if self.instance else None
 
+        # Regla: un docente/laboratorio/paralelo no puede tener dos clases al
+        # mismo tiempo (mismo dia + bloque + periodo).
         qs = Horario.objects.filter(dia_semana=dia, bloque_horario=bloque, periodo_lectivo=periodo)
         if self.instance:
             qs = qs.exclude(pk=self.instance.pk)
@@ -58,6 +71,21 @@ class HorarioSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('El laboratorio ya esta ocupado en ese dia y bloque horario.')
         if paralelo and qs.filter(paralelo=paralelo).exists():
             raise serializers.ValidationError('El paralelo ya tiene una clase asignada en ese dia y bloque horario.')
+
+        # Regla: no asignar clases durante el receso.
+        check_no_receso(bloque)
+        # Regla: la materia solo puede impartirla un docente autorizado para ella.
+        check_materia_autorizada(docente, materia)
+        # Regla: el laboratorio debe soportar la capacidad del paralelo.
+        check_capacidad_laboratorio(laboratorio, paralelo)
+        # Regla: el curso (paralelo) no puede superar 8 horas de clase por dia.
+        check_horas_dia(Horario, paralelo, dia, periodo, bloque, exclude_pk=exclude_pk)
+        # Regla: maximo 2 horas consecutivas de la misma materia.
+        if bloque is not None:
+            check_consecutivas_materia(Horario, paralelo, materia, dia, periodo, bloque.orden, exclude_pk=exclude_pk)
+        # Regla: el docente no puede superar su carga horaria semanal.
+        check_carga_semanal_docente(Horario, docente, periodo, bloque, exclude_pk=exclude_pk)
+
         return attrs
 
 

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from .models import AsignacionDocente, Docente, DisponibilidadDocente, DocenteLaboratorioAutorizado, DocenteMateriaAutorizada
+from .rules import check_materia_autorizada
 
 
 class DocenteSerializer(serializers.ModelSerializer):
@@ -71,3 +72,9 @@ class AsignacionDocenteSerializer(serializers.ModelSerializer):
 
     def get_docente_nombre(self, obj):
         return f"{obj.docente.usuario.nombres} {obj.docente.usuario.apellidos}".strip()
+
+    def validate(self, attrs):
+        docente = attrs.get('docente', getattr(self.instance, 'docente', None))
+        materia = attrs.get('materia', getattr(self.instance, 'materia', None))
+        check_materia_autorizada(docente, materia)
+        return attrs
